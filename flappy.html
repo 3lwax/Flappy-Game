@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Irish+Grover&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: "Irish Grover", serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+        @media (max-width: 600px) { .ui { width: 200px; padding: 15px; font-size: 22px; } .ui span { margin-right: 10px; } }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: url('background.jpg') no-repeat center center / cover;
+        }
+
+        .ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 20px 30px;
+            color: white;
+            font-size: 28px;
+            background-color: rgba(6, 6, 46, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            text-align: left; /* Align text to the left for better readability */
+            width: 180px; /* Slightly wider to fit the text comfortably */
+        }
+
+        .ui span {
+            display: inline-block; /* Inline block to place elements side by side */
+            margin-right: 15px; /* Spacing between label and value */
+        }
+
+        .ui span:last-child {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="ui">
+        <span>Score:</span><span id="score">0</span><br>
+        <span>High Score:</span><span id="highScore">0</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const birdImg = new Image();
+        birdImg.src = 'bird.png';
+
+        let bird;
+        let pipes;
+        let pipeWidth = 80;
+        let pipeGap = 180;
+        const initialPipeSpeed = 7;
+        let pipeSpeed = initialPipeSpeed;
+        let score;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let gameOver;
+
+        function initGame() {
+            bird = {
+                x: 50,
+                y: canvas.height / 2,
+                width: 50,
+                height: 50,
+                gravity: 0.8,
+                lift: -12,
+                velocity: 0
+            };
+            pipes = [];
+            pipeSpeed = initialPipeSpeed;
+            score = 0;
+            gameOver = false;
+            document.getElementById('score').innerText = score;
+            document.getElementById('highScore').innerText = highScore;
+            console.log("Game Initialized: Pipe Speed =", pipeSpeed);
+        }
+
+        function drawBird() {
+            ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+        }
+
+        function drawPipes() {
+            pipes.forEach(pipe => {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+                ctx.fillRect(pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - pipe.top - pipeGap);
+            });
+        }
+
+        function updatePipes() {
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
+                let topHeight = Math.random() * (canvas.height - pipeGap - 100) + 50;
+                pipes.push({ x: canvas.width, top: topHeight });
+            }
+
+            pipes.forEach(pipe => pipe.x -= pipeSpeed);
+
+            pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
+        }
+
+        function checkCollision() {
+            pipes.forEach(pipe => {
+                if (
+                    bird.x < pipe.x + pipeWidth &&
+                    bird.x + bird.width > pipe.x &&
+                    (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap)
+                ) {
+                    gameOver = true;
+                }
+
+                if (pipe.x + pipeWidth < bird.x && !pipe.passed) {
+                    pipe.passed = true;
+                    score++;
+                    if (score % 15 === 0) {
+                        pipeSpeed += 1; // Increase speed every 15 points
+                        console.log("Pipe Speed Increased:", pipeSpeed);
+                    }
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('highScore', highScore);
+                    }
+                    document.getElementById('score').innerText = score;
+                    document.getElementById('highScore').innerText = highScore;
+                }
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (gameOver) {
+                ctx.font = 'bold italic 50px "Irish Grover", serif';
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'black';
+                ctx.fillStyle = 'white';
+                ctx.strokeText('Game Over!', canvas.width / 2 - 150, canvas.height / 2);
+                ctx.fillText('Game Over!', canvas.width / 2 - 150, canvas.height / 2);
+                ctx.font = 'bold italic 30px "Irish Grover", serif';
+                ctx.strokeText('Press Space or Tap to Restart', canvas.width / 2 - 190, canvas.height / 2 + 50);
+                ctx.fillText('Press Space or Tap to Restart', canvas.width / 2 - 190, canvas.height / 2 + 50);
+                return;
+            }
+
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Prevent the bird from moving out of bounds
+            if (bird.y + bird.height > canvas.height) {
+                bird.y = canvas.height - bird.height;
+                bird.velocity = 0;
+            } else if (bird.y < 0) {
+                bird.y = 0;
+                bird.velocity = 0;
+            }
+
+            updatePipes();
+
+            // Check only for pipe collisions, not screen boundaries
+            checkCollision();
+
+            drawPipes();
+            drawBird();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                if (gameOver) {
+                    initGame();
+                    gameLoop();
+                } else {
+                    bird.velocity = bird.lift;
+                }
+            }
+        });
+
+        canvas.addEventListener('touchstart', e => {
+            if (gameOver) {
+                initGame();
+                gameLoop();
+            } else {
+                bird.velocity = bird.lift;
+            }
+        });
+
+        // Initialize the game on first load
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>

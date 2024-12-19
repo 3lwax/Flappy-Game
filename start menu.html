@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Start Menu</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('background.jpg') no-repeat center center / cover;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-shadow: 2px 2px 4px #000000;
+        }
+
+        .menu {
+            text-align: center;
+        }
+        @media (max-width: 600px) { .menu h1 { font-size: 35px; } .menu button { font-size: 16px; padding: 8px 16px; } }
+        .menu h1 {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: yellow;
+            text-shadow:
+            -2px -2px 0 #000,
+            2px -2px 0 #000,
+            -2px 2px 0 #000,
+            2px 2px 0 #000;
+            font-style: italic;
+            transition: all .7s ease-in-out;
+            cursor:pointer;
+        }
+        .menu>h1:hover{
+            transform: translateY(-3px) scale(1.1);
+            
+        }
+        .menu button {
+            font-size: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px #000000;
+            transition: background-color 0.3s ease;
+        }
+
+        .menu button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <h1>Flappy Bird</h1>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <script>
+        function startGame() {
+            window.location.href = 'flappy.html';
+        }
+    </script>
+</body>
+</html>
